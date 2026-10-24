@@ -1,6 +1,6 @@
 # Render Blueprint for the Chrome-impersonating forwarder.
-# Copy this file to the ROOT of the repository (next to forwarder.py and
-# requirements.txt), then: Render Dashboard -> New -> Blueprint -> select repo.
+# Lives at the repository root, next to forwarder.py and requirements.txt.
+# Render Dashboard -> New -> Blueprint -> select this repo.
 services:
   - type: web
     name: mhr-forwarder-py

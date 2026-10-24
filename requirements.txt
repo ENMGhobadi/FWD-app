@@ -1,3 +1,3 @@
 # Python forwarder (Chrome impersonation via curl_cffi)
-# Python 3.12 recommended (Render: set PYTHON_VERSION=3.12.7)
+# Any Python >= 3.10 works: curl_cffi ships an abi3 Linux wheel.
 curl_cffi==0.16.3
