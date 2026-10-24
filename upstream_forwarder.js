@@ -30,7 +30,7 @@ const net = require("net");
 
 const AUTH_KEY = process.env.AUTH_KEY || "";
 const PORT = parseInt(process.env.PORT, 10) || 8787;
-const HOST = process.env.HOST || "127.0.0.1";
+const HOST = process.env.HOST || "0.0.0.0";
 const TIMEOUT_MS = parseInt(process.env.TIMEOUT_MS, 10) || 25000;
 const MAX_BODY_BYTES = parseInt(process.env.MAX_BODY_BYTES, 10) || 50 * 1024 * 1024;
 const MAX_REQUEST_BYTES = parseInt(process.env.MAX_REQUEST_BYTES, 10) || 50 * 1024 * 1024;
