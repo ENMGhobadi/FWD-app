@@ -281,14 +281,25 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(payload).encode("utf-8")
         self.send_body(status, body, "application/json; charset=utf-8")
 
+    @staticmethod
+    def _path_only(path: str) -> str:
+        return (urlsplit(path).path or "/").rstrip("/") or "/"
+
     def do_GET(self):
-        if self.path in ("/", ""):
+        if self._path_only(self.path) == "/":
             self.send_body(200, STATUS_PAGE.encode("utf-8"), "text/html; charset=utf-8")
             return
         self.send_json(404, {"e": "not found"})
 
+    def do_HEAD(self):
+        # Render's health check may use HEAD; GET already skips the body for it.
+        self.do_GET()
+
     def do_POST(self):
-        if self.path != "/fwd":
+        # Accept POST /, /fwd and /fwd/ so a missing or trailing "/fwd" in the
+        # Worker's UPSTREAM_FORWARDER_URL cannot break the relay. Auth is still
+        # required, so exposing "/" as an endpoint is safe.
+        if self._path_only(self.path) not in ("/", "/fwd"):
             self.send_json(404, {"e": "not found"})
             return
 
