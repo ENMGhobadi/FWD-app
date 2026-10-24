@@ -159,6 +159,9 @@ const WORKER_URL = "https://newhmr.<account>.workers.dev";
 6. مطمئن شو شاخه‌ی اصلی main است و فایل‌ها در ریشه‌اند (نه در زیرپوشه). اگر در
    زیرپوشه‌اند، در Render مقدار Root Directory را همان زیرپوشه بگذار.
 
+> اگر ریپوی ENMGhobadi/FWD-app را از قبل داری، همین فایل‌ها در ریشه‌اش هستند؛
+> لازم نیست ریپوی جدید بسازی — همان را به Render بده.
+
 > بدون این ریپو، Render چیزی برای ساختن ندارد. Render می‌تواند از Docker image
 > هم دیپلوی کند، ولی ساده‌ترین و تست‌شده‌ترین راه همین GitHub است.
 
@@ -224,7 +227,7 @@ Environment:
 | گزینه | نتیجه |
 |---|---|
 | هیچ خروجی اضافه (MODE=fetch) | زنجیره کار می‌کند ولی IP کلادفلر (متغیر/مشترک) و اثر انگشت Node؛ برای کپچا مناسب نیست |
-| VM با IP رزروشده (Oracle Always Free / GCP e2-micro) + همان forwarder.py پشت Caddy | تنها راه IP واقعاً ثابت |
+| VM با IP رزروشده (Oracle Always Free / GCP e2-micro) + همان forwarder.py پشت Caddy | تنها راه IP واقعاً ثابت — [راهنمای VM](../deploy/upstream_forwarder/README.md) |
 | هر PaaS دیگری با Python/Node و HTTPS عمومی (Koyeb، Fly، Railway…) | همان فایل‌ها، همان قرارداد |
 | Node forwarder روی Render | فقط IP پایدار، بدون Chrome |
 
