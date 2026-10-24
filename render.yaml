@@ -1,0 +1,24 @@
+# Render Blueprint for the Chrome-impersonating forwarder.
+# Copy this file to the ROOT of the repository (next to forwarder.py and
+# requirements.txt), then: Render Dashboard -> New -> Blueprint -> select repo.
+services:
+  - type: web
+    name: mhr-forwarder-py
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: python forwarder.py
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: AUTH_KEY
+        sync: false
+      - key: HOST
+        value: 0.0.0.0
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: IMPERSONATE
+        value: chrome
+      - key: TIMEOUT_MS
+        value: "90000"
