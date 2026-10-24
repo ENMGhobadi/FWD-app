@@ -136,6 +136,101 @@ const WORKER_URL = "https://newhmr.<account>.workers.dev";
 
 ## ۶) فاز ۳ — Render Forwarder (خروجی)
 
+### ۳.۰) GitHub و Render از صفر (قبل از هر چیز)
+
+این معماری برای «IP پایدار + اثر انگشت Chrome» به یک سرویس عمومی HTTPS نیاز
+دارد که forwarder روی آن اجرا شود. در این راهنما Render انتخاب شده چون رایگان
+است و مستقیم از GitHub دیپلوی می‌شود. اگر Render نداشته باشی، زنجیره باز هم کار
+می‌کند ولی بدون IP پایدار و بدون اثر انگشت Chrome (پایین‌تر توضیح داده شده).
+
+#### الف) ساخت ریپوی GitHub
+
+1. به github.com برو → New repository.
+2. نام: FWD-app (یا هر نامی). Private امن‌تر است؛ Public هم کار می‌کند.
+3. Create repository (بدون README و .gitignore، تا خالی باشد).
+4. این فایل‌ها را از پوشه‌ی deploy/upstream_forwarder به **ریشه‌ی** ریپو اضافه کن:
+   - forwarder.py
+   - requirements.txt
+   - render.yaml
+   - اگر نسخه‌ی Node را هم می‌خواهی: upstream_forwarder.js و package.json
+5. دو روش اضافه‌کردن:
+   - وب: Add file → Upload files → فایل‌ها را بکش و رها کن → Commit to main.
+   - گیت: git clone، فایل‌ها را کپی کن، git add/commit/push.
+6. مطمئن شو شاخه‌ی اصلی main است و فایل‌ها در ریشه‌اند (نه در زیرپوشه). اگر در
+   زیرپوشه‌اند، در Render مقدار Root Directory را همان زیرپوشه بگذار.
+
+> بدون این ریپو، Render چیزی برای ساختن ندارد. Render می‌تواند از Docker image
+> هم دیپلوی کند، ولی ساده‌ترین و تست‌شده‌ترین راه همین GitHub است.
+
+#### ب) ساخت اکانت Render و اتصال GitHub
+
+1. render.com → Sign up (با GitHub).
+2. به Render اجازه بده ریپوهایت را ببیند؛ اگر Private است، دسترسی همان ریپو را بده.
+3. Dashboard → New.
+
+#### ج) ساخت سرویس با Blueprint (ساده‌ترین)
+
+1. New → Blueprint.
+2. ریپوی FWD-app را انتخاب کن.
+3. Render فایل render.yaml را می‌خواند و سرویس mhr-forwarder-py را می‌سازد:
+   - Runtime: Python
+   - Plan: Free
+   - Region: Frankfurt
+   - Build: pip install -r requirements.txt
+   - Start: python forwarder.py
+   - Health Check Path: /
+4. فقط AUTH_KEY را می‌پرسد (چون sync:false است). همان کلید ≥ ۳۲ کاراکتری را وارد کن.
+5. Apply / Create.
+6. صبر کن تا Live شود. آدرس چیزی مثل https://mhr-forwarder-py.onrender.com است
+   (اگر نام تکراری باشد، پسوند می‌گیرد).
+
+#### د) ساخت سرویس به‌صورت دستی (اگر Blueprint را نمی‌خواهی)
+
+New → Web Service → ریپو را انتخاب کن و این مقادیر را بگذار:
+
+| فیلد | مقدار |
+|---|---|
+| Language | Python |
+| Root Directory | خالی (یا مسیر فایل‌ها) |
+| Build Command | pip install -r requirements.txt |
+| Start Command | python forwarder.py |
+| Health Check Path | / |
+| Instance Type | Free |
+| Region | Frankfurt |
+
+Environment:
+
+| نام | مقدار |
+|---|---|
+| AUTH_KEY | کلید تصادفی ≥ ۳۲ کاراکتر |
+| HOST | 0.0.0.0 |
+| IMPERSONATE | chrome |
+
+→ Create Web Service.
+
+#### ه) بعد از Deploy
+
+- Logs را ببین: باید چیزی مثل
+  listening on 0.0.0.0:<port> (profile=chrome, timeout=...) بیاید.
+- GET / باید Forwarder Active + profile: chrome بدهد. از ایران خود
+  onrender.com باز نمی‌شود؛ مهم نیست. با tools/check_exit.py یا یک fetcher
+  بیرونی چک کن.
+- آدرسی که در FORWARD_URLS می‌گذاری، همان https://<service>.onrender.com/fwd است.
+- Render به‌طور پیش‌فرض با هر push به main خودش redeploy می‌کند (Auto-Deploy).
+  اگر نمی‌خواهی، در Settings خاموشش کن.
+
+#### و) اگر Render نمی‌خواهی
+
+| گزینه | نتیجه |
+|---|---|
+| هیچ خروجی اضافه (MODE=fetch) | زنجیره کار می‌کند ولی IP کلادفلر (متغیر/مشترک) و اثر انگشت Node؛ برای کپچا مناسب نیست |
+| VM با IP رزروشده (Oracle Always Free / GCP e2-micro) + همان forwarder.py پشت Caddy | تنها راه IP واقعاً ثابت |
+| هر PaaS دیگری با Python/Node و HTTPS عمومی (Koyeb، Fly، Railway…) | همان فایل‌ها، همان قرارداد |
+| Node forwarder روی Render | فقط IP پایدار، بدون Chrome |
+
+> بدون یک سرویس عمومی HTTPS (Render/VM/…)، خروجی پایدار و Chrome نداری؛ خود
+> mhr به‌تنهایی فقط رله‌ی Cloudflare است.
+
 ### گزینه A — Python + curl_cffi (توصیه‌شده برای کپچا)
 
 فایل‌ها:
@@ -196,6 +291,8 @@ Render رنج‌های خروجی را بین سرویس‌های هر ریجن 
 
 - برای هر اکانت/workspace یک سرویس Python بساز (نه چند سرویس در یک اکانت؛
   ۵ گیگ و ۷۵۰ ساعت بین سرویس‌های یک اکانت مشترک است).
+- همه‌ی اکانت‌های Render می‌توانند به **همان ریپوی GitHub** وصل شوند (هر اکانت
+  دسترسی ریپو را می‌دهد) یا از فورک استفاده کنند؛ لازم نیست کد را تکرار کنی.
 - کلید AUTH_KEY را برای همه یکسان بگذار تا فقط URL عوض شود.
 - هر اکانت یک ورودی در FORWARD_URLS می‌شود:
 
