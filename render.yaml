@@ -16,7 +16,7 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: PYTHON_VERSION
-        value: 3.12.11
+        value: 3.12.15
       - key: IMPERSONATE
         value: chrome
       - key: TIMEOUT_MS
