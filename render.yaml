@@ -18,5 +18,7 @@ services:
         value: 0.0.0.0
       - key: IMPERSONATE
         value: chrome
+      - key: EGRESS_PROXY
+        sync: false
       - key: TIMEOUT_MS
         value: "90000"

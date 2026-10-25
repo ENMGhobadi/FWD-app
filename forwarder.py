@@ -19,6 +19,7 @@ Env:
     HOST            default 127.0.0.1 (use 0.0.0.0 on Render)
     PORT            default 8787 (Render injects it)
     IMPERSONATE     default "chrome" (curl_cffi profile; empty = disabled)
+    EGRESS_PROXY    optional authenticated HTTP/SOCKS proxy URL; controls target egress IP
     TIMEOUT_MS      default 25000
     MAX_BODY_BYTES  default 50 MB
     REDIRECT_LIMIT  default 5
@@ -50,6 +51,7 @@ MAX_BODY = int(os.environ.get("MAX_BODY_BYTES", str(50 * 1024 * 1024)))
 MAX_REQ = int(os.environ.get("MAX_REQUEST_BYTES", str(50 * 1024 * 1024)))
 REDIRECT_LIMIT = int(os.environ.get("REDIRECT_LIMIT", "5"))
 ALLOW_PRIVATE = os.environ.get("ALLOW_PRIVATE", "").strip().lower() in ("1", "true", "yes", "on")
+EGRESS_PROXY = os.environ.get("EGRESS_PROXY", "").strip()
 
 if not AUTH_KEY or len(AUTH_KEY) < 32:
     print("FATAL: AUTH_KEY env var missing or shorter than 32 chars.", file=sys.stderr)
@@ -85,8 +87,8 @@ STATUS_PAGE = (
     "<!DOCTYPE html><html><head><title>Forwarder Active</title></head>"
     '<body style="font-family:sans-serif;max-width:600px;margin:40px auto">'
     "<h1>Forwarder <span style=\"color:#16a34a;font-weight:700\">Active</span></h1>"
-    "<p>Chrome-impersonating upstream forwarder for mhr-cfw.</p>"
-    "<p>profile: " + (IMPERSONATE or "none") + "</p>"
+    "<p>mhr-cfw upstream forwarder.</p>"
+    "<p>mode: " + ("proxy egress" if EGRESS_PROXY else "direct egress") + "</p>"
     "</body></html>"
 )
 
@@ -99,6 +101,8 @@ def get_session():
         kwargs = {}
         if IMPERSONATE:
             kwargs["impersonate"] = IMPERSONATE
+        if EGRESS_PROXY:
+            kwargs["proxy"] = EGRESS_PROXY
         session = cffi_requests.Session(**kwargs)
         _thread_local.session = session
     return session
@@ -318,6 +322,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         raw = self.rfile.read(length) if length else b""
+
         try:
             payload = json.loads(raw)
         except Exception:

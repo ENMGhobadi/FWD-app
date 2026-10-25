@@ -261,9 +261,16 @@ Environment:
 | AUTH_KEY | یک کلید تصادفی ≥ ۳۲ کاراکتر (همان برای همه‌ی forwarderها) |
 | HOST | 0.0.0.0 |
 | IMPERSONATE | chrome |
+| EGRESS_PROXY | اختیاری؛ نشانی کامل endpoint پروکسی خروجی، با اطلاعات ورود در صورت نیاز |
+
+اگر `EGRESS_PROXY` تنظیم شود، درخواست‌های خروجی از آن endpoint عبور می‌کنند؛
+در غیر این صورت مستقیماً از IP سرویس Render خارج می‌شوند. برای IP خانگی یا
+موبایل باید endpoint را از یک ارائه‌دهنده‌ی واقعی residential/mobile بگیری؛
+Render یا این تنظیم به‌تنهایی چنین IPای ایجاد نمی‌کند و پذیرش آن توسط سایت مقصد
+تضمین‌شده نیست. مقدار و اطلاعات ورود را در Git قرار نده.
 
 10. Deploy. بعد از Live شدن، GET / باید بدهد:
-    Forwarder Active + profile: chrome
+    Forwarder Active + mode: proxy egress (اگر EGRESS_PROXY تنظیم شده باشد)
     (از ایران خود onrender باز نمی‌شود؛ مهم نیست. ورکر به آن وصل می‌شود.)
 
 > نسخه‌ی پایتون: هر ۳.۱۰+ کار می‌کند؛ curl_cffi چرخ abi3 دارد و کامپایل
